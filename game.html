@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ASCII Adventure</title>
+    <style>
+        :root {
+            --bg-color: #111;
+            --text-color: #afa;
+            --button-bg: #333;
+            --button-border: #5f5;
+            --button-hover-bg: #5f5;
+            --button-hover-text: #000;
+            --progress-bar: #5ff;
+            --border-color: #5f5;
+            --coin-color: gold;
+            --shop-bg: #222;
+            --page-bg: rgba(30,30,30,0.8);
+        }
+        .light-mode {
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --button-bg: #e0e0e0;
+            --button-border: #4CAF50;
+            --button-hover-bg: #4CAF50;
+            --button-hover-text: #fff;
+            --progress-bar: #2196F3;
+            --border-color: #4CAF50;
+            --coin-color: #FF9800;
+            --shop-bg: #eee;
+            --page-bg: rgba(240,240,240,0.9);
+        }
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            overflow-x: hidden;
+            transition: all 0.3s ease;
+        }
+        #theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 90px;
+            background: var(--button-bg);
+            color: var(--text-color);
+            border: 2px solid var(--button-border);
+            border-radius: 30px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        #theme-toggle:hover {
+            background: var(--button-hover-bg);
+            color: var(--button-hover-text);
+            transform: scale(1.05);
+        }
+        #theme-icon {
+            font-size: 18px;
+        }
+        button {
+            font-family: 'Courier New', monospace;
+            background-color: var(--button-bg);
+            color: var(--text-color);
+            border: 2px solid var(--button-border);
+            padding: 12px 24px;
+            margin: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            background-color: var(--button-hover-bg);
+            color: var(--button-hover-text);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .page {
+            display: none;
+            background-color: var(--page-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .active-page {
+            display: block;
+        }
+        #game-container {
+            text-align: left;
+            white-space: pre;
+            overflow: hidden;
+            line-height: 0.9;
+            font-size: 16px;
+            min-height: 200px;
+            color: var(--text-color);
+            margin: 0 auto;
+            padding: 10px;
+            background-color: var(--bg-color);
+            border-radius: 5px;
+        }
+        #coins-display {
+            margin: 15px 0;
+            font-size: 1.5em;
+            color: var(--coin-color);
+            text-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        .mission-info, .item-info {
+            color: var(--text-color);
+            opacity: 0.8;
+            margin: 8px;
+            font-size: 14px;
+        }
+        #progress-container {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            background-color: var(--bg-color);
+            padding: 10px 0;
+            z-index: 10;
+            border-top: 2px solid var(--border-color);
+        }
+        #progress-display {
+            margin: 5px 0;
+            color: var(--progress-bar);
+        }
+        #progress-bar {
+            width: 0%;
+            height: 8px;
+            background-color: var(--progress-bar);
+            transition: width 0.5s;
+            margin: 0 auto;
+            max-width: 500px;
+            border-radius: 4px;
+        }
+        #nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .nav-button {
+            min-width: 120px;
+        }
+        #reset-button {
+            background-color: #f44336;
+            border-color: #d32f2f;
+        }
+        #reset-button:hover {
+            background-color: #d32f2f;
+        }
+        #shop-button {
+            background-color: #FF9800;
+            border-color: #F57C00;
+        }
+        #shop-button:hover {
+            background-color: #F57C00;
+        }
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid var(--button-border);
+            border-radius: 5px;
+        }
+        .item-equipped {
+            background-color: rgba(0,255,0,0.2);
+            border-color: #4CAF50;
+        }
+        .item-owned {
+            background-color: rgba(100,100,255,0.1);
+        }
+        .tab-button {
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        .active-tab {
+            background-color: var(--button-hover-bg);
+            color: var(--button-hover-text);
+        }
+        .tab-content {
+            display: none;
+        }
+        .active-tab-content {
+            display: block;
+        }
+        .mission-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .mission-card {
+            background-color: var(--button-bg);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid var(--button-border);
+            transition: transform 0.3s;
+        }
+        .mission-card:hover {
+            transform: translateY(-5px);
+        }
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .inventory-item {
+            background-color: var(--button-bg);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid var(--button-border);
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            .mission-board, .inventory-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Settings Button */
+        #settings-toggle {
+            position: fixed;
+            top: 20px;
+            right: 10px;
+            background: var(--button-bg);
+            color: var(--text-color);
+            border: 2px solid var(--button-border);
+            border-radius: 30px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        #settings-toggle:hover {
+            transform: rotate(30deg);
+            background: var(--button-hover-bg);
+            color: var(--button-hover-text);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+        }
+
+        /* Enhanced Modal Styles */
+        .modal-content {
+            background-color: var(--page-bg);
+            margin: 10% auto;
+            padding: 25px;
+            border: 2px solid var(--button-border);
+            border-radius: 12px;
+            width: 85%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            color: var(--text-color);
+            font-size: 24px;
+            border-bottom: 2px solid var(--button-border);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .settings-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 12px 15px;
+            background-color: var(--button-bg);
+            border-radius: 10px;
+            border: 1px solid var(--button-border);
+            transition: all 0.3s ease;
+        }
+
+        .settings-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .settings-option span {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-option span::before {
+            content: "⛶";
+            font-size: 1.3em;
+            color: var(--coin-color);
+        }
+
+        .settings-spacer {
+            height: 1px;
+            background: var(--button-border);
+            margin: 20px 0;
+            opacity: 0.3;
+        }
+
+        #close-settings {
+            background-color: var(--button-bg);
+            color: var(--text-color);
+            font-size: 18px;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+
+        #close-settings:hover {
+            background-color: var(--button-hover-bg);
+            color: var(--button-hover-text);
+            transform: translateY(-2px);
+        }
+
+        #modal-reset-button {
+            background-color: #f44336;
+            border-color: #d32f2f;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+
+        #modal-reset-button:hover {
+            background-color: #d32f2f;
+            transform: translateY(-2px);
+        }
+
+        /* Enhanced Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--button-bg);
+            transition: .4s;
+            border: 2px solid var(--button-border);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--text-color);
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: var(--button-hover-bg);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+            background-color: var(--button-hover-text);
+        }
+
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* Volume Control Styles */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .volume-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--button-bg);
+            color: var(--text-color);
+            border: 1px solid var(--button-border);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .volume-btn:hover {
+            background: var(--button-hover-bg);
+            color: var(--button-hover-text);
+            transform: scale(1.1);
+        }
+
+        /* Volume Slider Styles */
+        .volume-slider {
+            width: 100px;
+            height: 8px;
+            appearance: none; /* Standard property */
+            -webkit-appearance: none; /* Vendor prefix for older browsers */
+            background: var(--button-bg);
+            border-radius: 4px;
+            border: 1px solid var(--button-border);
+            outline: none;
+            cursor: pointer;
+            margin-left: 15px;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--button-hover-bg);
+            border: 1px solid var(--button-border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--button-hover-bg);
+            border: 1px solid var(--button-border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .volume-slider:hover::-webkit-slider-thumb {
+            transform: scale(1.1);
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+
+        /* Keep all other existing styles the same */
+
+        /* Credits Style */
+        .credits {
+            justify-content: center;
+            background: transparent;
+            border: none;
+            padding: 8px 0;
+            margin: 5px 0;
+        }
+
+        .credits span {
+            font-style: italic;
+            opacity: 0.8;
+            font-size: 16px;
+        }
+
+        .credits:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Add to your existing switch styles */
+        #music-toggle {
+            margin-left: 15px;
+        }
+        #music-control {
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--button-bg);
+            color: var(--text-color);
+            border: 1px solid var(--button-border);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <button id="theme-toggle">
+        <span id="theme-icon">🌙</span>
+        <span>Dark Mode</span>
+    </button>
+
+    <button id="settings-toggle" class="top-right-button">
+        ⚙️
+    </button>
+    
+    <h1>ASCII Adventure</h1>
+
+    <div id="header-line" class="border-line"></div>
+    
+    <div id="coins-display">Coins: 0</div>
+    
+    <div id="nav-buttons">
+        <button class="nav-button" onclick="showPage('home-page')">Home</button>
+        <button class="nav-button" onclick="showPage('missions-page')">Missions</button>
+        <button class="nav-button" onclick="showPage('shop-page')">Shop</button>
+        <button class="nav-button" onclick="showPage('inventory-page')">Inventory</button>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h3>⚙️ Game Settings</h3>
+            
+            <!-- Fullscreen Toggle -->
+            <div class="settings-option">
+                <span>Fullscreen Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="fullscreen-toggle">
+                    <div class="slider round"></div>
+                </label>
+            </div>
+            
+            <!-- Volume Control (Slider only) -->
+            <div class="settings-option">
+                <span>Sound Volume</span>
+                <input type="range" id="volume-slider" min="0" max="100" value="50" class="volume-slider">
+            </div>
+
+            <button id="music-control">🔇 Enable Music</button>
+            <audio id="background-music" loop preload="auto">
+                <source src="audio/background-music.mp3" type="audio/mpeg">
+            </audio>
+            
+            <div class="settings-spacer"></div>
+            
+            <!-- Reset Button -->
+            <button id="modal-reset-button" onclick="resetProgress()">Reset 🗑️</button>
+            
+            <!-- Close Button -->
+            <button id="close-settings">Close</button>
+
+            <!-- Credits -->
+            <div class="settings-option credits">
+                <span>Created by Rafael Santos</span>
+            </div>
+
+        </div>
+    </div>
+    
+    
+    <!-- Home Page -->
+    <div id="home-page" class="page active-page">
+        <h2>Welcome Adventurer!</h2>
+        <p>Embark on epic ASCII adventures and earn coins to upgrade your gear.</p>
+        <div id="game-container">Select a mission from the Missions page to begin!</div>
+    </div>
+    
+    <!-- Missions Page -->
+    <div id="missions-page" class="page">
+        <h2>Mission Board</h2>
+        <div class="mission-board" id="mission-container">
+            <!-- Missions will be added dynamically -->
+        </div>
+    </div>
+    
+    <!-- Shop Page -->
+    <div id="shop-page" class="page">
+        <h2>Item Shop</h2>
+        <div class="tab-buttons">
+            <button class="tab-button active-tab" onclick="openTab('shop-tab')">Shop</button>
+            <button class="tab-button" onclick="openTab('upgrades-tab')">Upgrades</button>
+        </div>
+        
+        <div id="shop-tab" class="tab-content active-tab-content">
+            <!-- Basic items -->
+            <div class="shop-item" id="item-boots">
+                <div>
+                    <h3>Leather Boots</h3>
+                    <p class="item-info">+10% movement speed (500 coins)</p>
+                </div>
+                <button onclick="buyItem('boots', 500)">Buy</button>
+            </div>
+            
+            <div class="shop-item" id="item-sneakers">
+                <div>
+                    <h3>Running Sneakers</h3>
+                    <p class="item-info">+25% movement speed (1,200 coins)</p>
+                </div>
+                <button onclick="buyItem('sneakers', 1200)">Buy</button>
+            </div>
+        </div>
+        
+        <div id="upgrades-tab" class="tab-content">
+            <!-- Premium items -->
+            <div class="shop-item" id="item-jetpack">
+                <div>
+                    <h3>Rocket Boots</h3>
+                    <p class="item-info">+50% movement speed (3,000 coins)</p>
+                </div>
+                <button onclick="buyItem('jetpack', 3000)">Buy</button>
+            </div>
+            
+            <div class="shop-item" id="item-telescope">
+                <div>
+                    <h3>Scout Telescope</h3>
+                    <p class="item-info">See further ahead (2,000 coins)</p>
+                </div>
+                <button onclick="buyItem('telescope', 2000)">Buy</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Inventory Page -->
+    <div id="inventory-page" class="page">
+        <h2>Your Inventory</h2>
+        <div class="inventory-grid" id="inventory-container">
+            <!-- Items will appear here when purchased -->
+        </div>
+    </div>
+    
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+        <div id="progress-display">Progress: 0%</div>
+    </div>
+
+    <audio id="background-music" loop>
+        <source src="audio/background-music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+
+        // Get elements
+        const music = document.getElementById("background-music");
+        const musicControl = document.getElementById("music-control");
+
+        // Set initial state from localStorage
+        music.volume = localStorage.getItem('musicVolume') || 0.5;
+        music.muted = localStorage.getItem('musicMuted') === 'true';
+
+        // Update button text
+        function updateButton() {
+            musicControl.textContent = music.muted ? "🔈 Enable Music" : "🔇 Disable Music";
+        }
+        updateButton();
+
+        // Toggle music on button click
+        musicControl.addEventListener("click", () => {
+            if (music.muted || music.paused) {
+                music.muted = false;
+                music.play().catch(e => console.log("Playback failed:", e));
+            } else {
+                music.muted = true;
+            }
+            
+            // Save state
+            localStorage.setItem('musicMuted', music.muted);
+            localStorage.setItem('musicVolume', music.volume);
+            
+            updateButton();
+        });
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                music.muted = true;
+            } else {
+                music.muted = localStorage.getItem('musicMuted') === 'true';
+            }
+            updateButton();
+        });
+        
+        // Settings Modal
+        const settingsToggle = document.getElementById('settings-toggle');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettings = document.getElementById('close-settings');
+        const fullscreenButton = document.getElementById('fullscreen-toggle');
+        const volumeSlider = document.getElementById('volume-slider');
+        const volumeDown = document.getElementById('volume-down');
+        const volumeUp = document.getElementById('volume-up');
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioElement = document.getElementById('background-music');
+        const source = audioContext.createMediaElementSource(audioElement);
+        source.connect(audioContext.destination);
+
+        settingsToggle.addEventListener('click', () => {
+            settingsModal.style.display = 'block';
+        });
+
+        closeSettings.addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === settingsModal) {
+                settingsModal.style.display = 'none';
+            }
+        });
+
+        // sound system
+        function initAudio() {
+            // Example using Web Audio API (you could use Howler.js instead)
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            gameState.audio.context = audioContext;
+            
+            // Load your sound files here (example):
+            // gameState.audio.sounds.mainTheme = loadSound('path/to/theme.mp3');
+        }
+
+        // Volume control implementation
+        function setupVolumeControls() {
+            const volumeSlider = document.getElementById('volume-slider');
+            
+            // Initialize volume (convert 0-1 to 0-100 for slider)
+            if (gameState.audio.volume === undefined) {
+                gameState.audio.volume = 0.5;
+                saveGameState();
+            }
+            volumeSlider.value = gameState.audio.volume * 100;
+
+            // Update volume when slider changes
+            volumeSlider.addEventListener('input', function() {
+                const volumeValue = this.value / 100;
+                gameState.audio.volume = volumeValue;
+                saveGameState();
+                
+                // Apply to all sounds
+                Object.values(gameState.audio.sounds).forEach(sound => {
+                    if (sound.gain) { // For Web Audio API
+                        sound.gain.gain.value = volumeValue;
+                    } else if (sound.volume) { // For Howler.js
+                        sound.volume(volumeValue);
+                    }
+                });
+            });
+        }
+
+        // Initialize music
+        function initMusic() {
+            const music = document.getElementById('background-music');
+            
+            // Set volume from saved state or default to 50%
+            music.volume = gameState.audio?.volume || 0.5;
+            
+            // Hide controls after testing
+            music.removeAttribute('controls');
+            
+            // Try to play, but prepare for autoplay restrictions
+            const playPromise = music.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("Autoplay blocked - will play after interaction");
+                    
+                    // Create a starter button if needed
+                    if (!document.getElementById('audio-starter')) {
+                        const starter = document.createElement('button');
+                        starter.id = 'audio-starter';
+                        starter.textContent = 'Click to enable audio';
+                        starter.style.position = 'fixed';
+                        starter.style.bottom = '20px';
+                        starter.style.right = '20px';
+                        starter.style.zIndex = '1000';
+                        starter.onclick = () => {
+                            music.play();
+                            starter.remove();
+                        };
+                        document.body.appendChild(starter);
+                    }
+                });
+            }
+        }
+
+        // Update your existing volume control
+        volumeSlider.addEventListener('input', function() {
+            const volumeValue = this.value / 100;
+            gameState.audio.volume = volumeValue;
+            document.getElementById('background-music').volume = volumeValue;
+            saveGameState();
+        });
+
+        // Add music toggle to settings modal
+        function addMusicToggle() {
+            const musicToggle = document.createElement('div');
+            musicToggle.className = 'settings-option';
+            musicToggle.innerHTML = `
+                <span>Background Music</span>
+                <label class="switch">
+                    <input type="checkbox" id="music-toggle" checked>
+                    <span class="slider round"></span>
+                </label>
+            `;
+            
+            // Insert after volume control
+            document.querySelector('.settings-option').after(musicToggle);
+            
+            // Music toggle functionality
+            document.getElementById('music-toggle').addEventListener('change', function() {
+                const music = document.getElementById('background-music');
+                gameState.audio.musicEnabled = this.checked;
+                
+                if (this.checked) {
+                    music.play();
+                } else {
+                    music.pause();
+                }
+                saveGameState();
+            });
+        }
+
+        // Update initGame()
+        function initGame() {
+            loadGameState();
+            initMusic();
+            addMusicToggle();
+            // ... rest of your initialization ...
+            
+            // Set initial toggle state
+            if (gameState.audio.musicEnabled !== undefined) {
+                document.getElementById('music-toggle').checked = gameState.audio.musicEnabled;
+            }
+        }
+
+        // In your initGame():
+        function initGame() {
+            loadGameState();
+            initAudio(); // Initialize audio system
+            setupVolumeControls(); // Setup volume slider
+            // ... rest of your init code ...
+        }
+        
+        // Fullscreen functionality
+        fullscreenButton.addEventListener('click', toggleFullscreen);
+
+        // Get the fullscreen toggle element
+        const fullscreenToggle = document.getElementById('fullscreen-toggle');
+
+        // Function to toggle fullscreen (same as your existing function)
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable fullscreen: ${err.message}`);
+                    // If fullscreen fails, make sure toggle matches state
+                    fullscreenToggle.checked = false;
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Update the toggle state based on current fullscreen status
+        function updateFullscreenToggle() {
+            fullscreenToggle.checked = !!document.fullscreenElement;
+        }
+
+        // Event listener for the toggle switch
+        fullscreenToggle.addEventListener('change', function() {
+            toggleFullscreen();
+        });
+
+        // Listen for fullscreen changes (to update the toggle when user presses F11/Esc)
+        document.addEventListener('fullscreenchange', updateFullscreenToggle);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenToggle); // Safari
+        document.addEventListener('msfullscreenchange', updateFullscreenToggle); // IE/Edge
+
+        // Initialize the toggle state when page loads
+        updateFullscreenToggle();
+
+        // Game State
+        const gameState = {
+            coins: 0,
+            items: {
+                boots: { name: "Leather Boots", speed: 0.9, price: 500, owned: false, equipped: false, type: "footwear" },
+                sneakers: { name: "Running Sneakers", speed: 0.75, price: 1200, owned: false, equipped: false, type: "footwear" },
+                jetpack: { name: "Rocket Boots", speed: 0.5, price: 3000, owned: false, equipped: false, type: "footwear" },
+                telescope: { name: "Scout Telescope", price: 2000, owned: false, equipped: false, type: "tool" }
+            },
+            missions: {
+                forest: {
+                    name: "Forest Path",
+                    baseSpeed: 10000,
+                    reward: 1500,
+                    description: "Navigate through dense ASCII forests",
+                    difficulty: "Easy"
+                    
+                },
+                mountain: {
+                    name: "Mountain Pass", 
+                    baseSpeed: 15000,
+                    reward: 3000,
+                    description: "Climb treacherous ASCII peaks",
+                    difficulty: "Medium"
+                },
+                cave: {
+                    name: "Dark Tunnel",
+                    baseSpeed: 20000,
+                    reward: 6000,
+                    description: "Explore mysterious ASCII caverns",
+                    difficulty: "Hard"
+                },
+                desert: {
+                    name: "Sandy Wastes",
+                    baseSpeed: 18000,
+                    reward: 4500,
+                    description: "Cross the scorching ASCII desert",
+                    difficulty: "Medium",
+                    locked: true
+                }
+            },
+            equippedItem: null,
+            speedMultiplier: 1,
+            currentMission: null,
+            currentPosition: 0,
+            totalDistance: 0,
+            activeMission: null,
+            darkMode: true,
+            audio: {
+            volume: 0.5,  // Default volume (0-1)
+            musicEnabled: true
+        }
+        };
+
+        // DOM Elements
+        const elements = {
+            coinsDisplay: document.getElementById('coins-display'),
+            gameContainer: document.getElementById('game-container'),
+            progressDisplay: document.getElementById('progress-display'),
+            progressBar: document.getElementById('progress-bar'),
+            missionContainer: document.getElementById('mission-container'),
+            inventoryContainer: document.getElementById('inventory-container'),
+            themeToggle: document.getElementById('theme-toggle'),
+            themeIcon: document.getElementById('theme-icon')
+        };
+
+        // Page Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active-page');
+            });
+            document.getElementById(pageId).classList.add('active-page');
+        }
+
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active-tab-content');
+            });
+            document.getElementById(tabId).classList.add('active-tab-content');
+            
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active-tab');
+            });
+            event.currentTarget.classList.add('active-tab');
+        }
+
+        // Initialize Game
+        function initGame() {
+            loadGameState();
+            renderMissions();
+            updateShopDisplay();
+            updateInventory();
+            updateSpeedDisplays();
+            
+            // Set initial page
+            showPage('home-page');
+        }
+
+        // Mission System
+        function renderMissions() {
+            elements.missionContainer.innerHTML = '';
+            
+            for (const [id, mission] of Object.entries(gameState.missions)) {
+                const missionElement = document.createElement('div');
+                missionElement.className = 'mission-card';
+                missionElement.innerHTML = `
+                    <h3>${mission.name}</h3>
+                    <p class="mission-info">${mission.description}</p>
+                    <p class="mission-info">Difficulty: ${mission.difficulty}</p>
+                    <p class="mission-info">Reward: ${mission.reward.toLocaleString()} coins</p>
+                    <p class="mission-info">Speed: 1px/${Math.round(mission.baseSpeed * gameState.speedMultiplier / 1000)}s</p>
+                    <button onclick="startMission('${id}')" ${mission.locked ? 'disabled' : ''}>
+                        ${mission.locked ? 'Locked' : 'Start Mission'}
+                    </button>
+                `;
+                elements.missionContainer.appendChild(missionElement);
+            }
+        }
+
+        function startMission(missionId) {
+            clearInterval(gameState.animationInterval);
+            
+            const mission = gameState.missions[missionId];
+            gameState.currentMission = missionId;
+            gameState.currentPosition = 0;
+            gameState.totalDistance = 80; // Default distance for all missions
+            
+            gameState.activeMission = {
+                type: missionId,
+                position: gameState.currentPosition
+            };
+            
+            updateProgressDisplay();
+            renderMissionScene();
+            
+            const speed = Math.round(mission.baseSpeed * gameState.speedMultiplier);
+            gameState.animationInterval = setInterval(() => {
+                gameState.currentPosition++;
+                gameState.activeMission.position = gameState.currentPosition;
+                renderMissionScene();
+                saveGameState();
+                
+                const progress = Math.min(100, Math.round((gameState.currentPosition / gameState.totalDistance) * 100));
+                elements.progressDisplay.textContent = `Progress: ${progress}%`;
+                elements.progressBar.style.width = `${progress}%`;
+                
+                if (gameState.currentPosition >= gameState.totalDistance) {
+                    clearInterval(gameState.animationInterval);
+                    gameState.coins += mission.reward;
+                    updateCoinDisplay();
+                    elements.gameContainer.textContent += `\n\n≫ Mission Complete! +${mission.reward.toLocaleString()} coins ≪`;
+                    elements.progressDisplay.textContent = "✓ Journey completed!";
+                    gameState.activeMission = null;
+                    saveGameState();
+                }
+            }, speed);
+            
+            saveGameState();
+            showPage('home-page');
+        }
+
+        function renderMissionScene() {
+            const scene = [];
+            const landscape = Array(5).fill(' '.repeat(Math.max(0, gameState.totalDistance)));
+            
+            // Add mission-specific elements
+            switch(gameState.currentMission) {
+                case 'forest':
+                    // Tree pattern background
+                    for (let i = 0; i < landscape.length; i++) {
+                        landscape[i] = landscape[i].replace(/ /g, (m, offset) => {
+                            if (i === 0 && offset % 2 === 0) return ' 88 ';
+                            if (i === 1 && offset % 2 === 0) return '8888';
+                            if (i === 2 && offset % 2 === 0) return ' || ';
+                            if (i === 3 && offset % 1 === 0) return '   ____    ';
+                            if (i === 4 && offset % 1 === 0) return '__/    \\___';
+                            return m;
+                        });
+                    }
+                    break;
+                case 'mountain':
+                    // Mountain pattern with peaks
+                    for (let i = 0; i < landscape.length; i++) {
+                        landscape[i] = landscape[i].replace(/ /g, (m, offset) => {
+                            if (i === 0 && offset % 1 === 0) return '   /\\   ';
+                            if (i === 1 && offset % 1 === 0) return '^\\/  \\/^';
+                            if (i === 2 && offset % 1 === 0) return ' /    \\ ';
+                            if (i === 3 && offset % 1 === 0) return '/      \\';
+                            if (i === 4 && offset % 1 === 0) return '-----------';
+                            return m;
+                        });
+                    }
+                    break;
+                case 'cave':
+                    for (let i = 0; i < landscape.length; i++) {
+                        landscape[i] = landscape[i].replace(/ /g, (m, offset) => {
+                            if (i === 0 && offset % 1 === 0) return '░░░░░░░░░░';
+                            if (i === 1 && offset % 1 === 0) return '░░░││││░░░';
+                            if (i === 2 && offset % 1 === 0) return '░░░░░░░░░░';
+                            if (i === 3 && offset % 1 === 0) return '░░░░░░░░░░';
+                            if (i === 4 && offset % 1 === 0) return '==========';
+                            return m;
+                        });
+                    }
+                    break;
+            }
+            
+            // Add character with bounds checking
+            const stickman = [" O ", "/|\\", "/ \\"];
+            for (let i = 0; i < stickman.length; i++) {
+                const currentPos = Math.min(gameState.currentPosition, gameState.totalDistance - stickman[i].length);
+                const line = ' '.repeat(Math.max(0, currentPos)) + stickman[i] + 
+                            ' '.repeat(Math.max(0, gameState.totalDistance - currentPos - stickman[i].length));
+                scene.push(line);
+            }
+            
+            elements.gameContainer.textContent = landscape.join('\n') + '\n' + scene.join('\n');
+        }
+
+        // Shop System
+        function updateShopDisplay() {
+            for (const [id, item] of Object.entries(gameState.items)) {
+                const element = document.getElementById(`item-${id}`);
+                if (element) {
+                    const button = element.querySelector('button');
+                    
+                    if (item.owned) {
+                        element.classList.add('item-owned');
+                        button.textContent = item.equipped ? 'Equipped' : 'Owned';
+                        button.disabled = item.equipped;
+                    } else {
+                        element.classList.remove('item-owned');
+                        button.textContent = `Buy (${item.price} coins)`;
+                        button.disabled = gameState.coins < item.price;
+                    }
+                    
+                    element.classList.toggle('item-equipped', item.equipped);
+                }
+            }
+        }
+
+        function buyItem(itemId, price) {
+            if (gameState.coins >= price && !gameState.items[itemId].owned) {
+                gameState.coins -= price;
+                gameState.items[itemId].owned = true;
+                updateCoinDisplay();
+                updateShopDisplay();
+                updateInventory();
+                saveGameState();
+            }
+        }
+
+        function equipItem(itemId) {
+            // Unequip current item of same type
+            for (const [id, item] of Object.entries(gameState.items)) {
+                if (item.equipped && item.type === gameState.items[itemId].type) {
+                    item.equipped = false;
+                }
+            }
+            
+            // Equip new item
+            gameState.items[itemId].equipped = true;
+            gameState.equippedItem = itemId;
+            
+            // Update speed multiplier if footwear
+            if (gameState.items[itemId].type === "footwear") {
+                gameState.speedMultiplier = gameState.items[itemId].speed;
+                updateSpeedDisplays();
+            }
+            
+            updateShopDisplay();
+            updateInventory();
+            saveGameState();
+        }
+
+        // Inventory System
+        function updateInventory() {
+            elements.inventoryContainer.innerHTML = '';
+            
+            let hasItems = false;
+            
+            for (const [id, item] of Object.entries(gameState.items)) {
+                if (item.owned) {
+                    hasItems = true;
+                    const itemElement = document.createElement('div');
+                    itemElement.className = `inventory-item ${item.equipped ? 'item-equipped' : ''}`;
+                    itemElement.innerHTML = `
+                        <h3>${item.name}</h3>
+                        ${item.speed ? `<p>Speed: +${Math.round((1 - item.speed) * 100)}%</p>` : ''}
+                        <button onclick="equipItem('${id}')" ${item.equipped ? 'disabled' : ''}>
+                            ${item.equipped ? 'Equipped' : 'Equip'}
+                        </button>
+                    `;
+                    elements.inventoryContainer.appendChild(itemElement);
+                }
+            }
+            
+            if (!hasItems) {
+                elements.inventoryContainer.innerHTML = '<p>No items purchased yet. Visit the shop!</p>';
+            }
+        }
+
+        // UI Updates
+        function updateCoinDisplay() {
+            elements.coinsDisplay.textContent = `Coins: ${gameState.coins.toLocaleString()}`;
+        }
+
+        function updateProgressDisplay() {
+            const progress = Math.min(100, Math.round((gameState.currentPosition / gameState.totalDistance) * 100));
+            elements.progressDisplay.textContent = `Progress: ${progress}%`;
+            elements.progressBar.style.width = `${progress}%`;
+        }
+
+        function updateSpeedDisplays() {
+            // This will update any displayed speed values
+            renderMissions();
+        }
+
+        // Save/Load System
+        function saveGameState() {
+            localStorage.setItem('asciiAdventureSave', JSON.stringify(gameState));
+        }
+
+        function loadGameState() {
+            const savedState = JSON.parse(localStorage.getItem('asciiAdventureSave'));
+            if (savedState) {
+                // Preserve the missions structure while loading other properties
+                const missions = gameState.missions;
+                Object.assign(gameState, savedState);
+                gameState.missions = missions;
+                
+                // Update UI based on loaded state
+                updateCoinDisplay();
+                updateProgressDisplay();
+                
+                // Set theme - CORRECTED LOGIC
+                if (gameState.darkMode) {
+                    document.body.classList.remove('light-mode');
+                    elements.themeIcon.textContent = '🌙';
+                    elements.themeToggle.querySelector('span:last-child').textContent = 'Dark Mode';
+                } else {
+                    document.body.classList.add('light-mode');
+                    elements.themeIcon.textContent = '☀️';
+                    elements.themeToggle.querySelector('span:last-child').textContent = 'Light Mode';
+                }
+                
+                // Resume active mission if one exists
+                if (gameState.activeMission) {
+                    gameState.currentMission = gameState.activeMission.type;
+                    gameState.currentPosition = gameState.activeMission.position || 0;
+                    updateProgressDisplay();
+                    renderMissionScene();
+                    
+                    const mission = gameState.missions[gameState.activeMission.type];
+                    const speed = Math.round(mission.baseSpeed * gameState.speedMultiplier);
+                    
+                    // Clear any existing interval
+                    clearInterval(gameState.animationInterval);
+                    
+                    // Restart the mission animation
+                    gameState.animationInterval = setInterval(() => {
+                        gameState.currentPosition++;
+                        gameState.activeMission.position = gameState.currentPosition;
+                        renderMissionScene();
+                        saveGameState();
+                        
+                        const progress = Math.min(100, Math.round((gameState.currentPosition / gameState.totalDistance) * 100));
+                        elements.progressDisplay.textContent = `Progress: ${progress}%`;
+                        elements.progressBar.style.width = `${progress}%`;
+                        
+                        if (gameState.currentPosition >= gameState.totalDistance) {
+                            clearInterval(gameState.animationInterval);
+                            gameState.coins += mission.reward;
+                            updateCoinDisplay();
+                            elements.gameContainer.textContent += `\n\n≫ Mission Complete! +${mission.reward.toLocaleString()} coins ≪`;
+                            elements.progressDisplay.textContent = "✓ Journey completed!";
+                            gameState.activeMission = null;
+                            saveGameState();
+                        }
+                    }, speed);
+                }
+            }
+        }
+
+        function resetProgress() {
+            if (confirm("Are you sure you want to reset all progress? This cannot be undone.")) {
+                localStorage.removeItem('asciiAdventureSave');
+                
+                // Reset game state
+                gameState.coins = 0;
+                gameState.currentPosition = 0;
+                gameState.totalDistance = 0;
+                gameState.currentMission = null;
+                gameState.activeMission = null;
+                clearInterval(gameState.animationInterval);
+                
+                // Reset items
+                for (const [id, item] of Object.entries(gameState.items)) {
+                    item.owned = false;
+                    item.equipped = false;
+                }
+                gameState.equippedItem = null;
+                gameState.speedMultiplier = 1;
+                
+                // Update UI
+                updateCoinDisplay();
+                elements.progressDisplay.textContent = "Progress: 0%";
+                elements.progressBar.style.width = "0%";
+                elements.gameContainer.textContent = "Select a mission to begin your journey...";
+                updateSpeedDisplays();
+                updateShopDisplay();
+                updateInventory();
+                renderMissions();
+            }
+        }
+
+        // Theme Toggle
+        elements.themeToggle.addEventListener('click', () => {
+            gameState.darkMode = !gameState.darkMode;
+            if (gameState.darkMode) {
+                document.body.classList.remove('light-mode');
+                elements.themeIcon.textContent = '🌙';
+                elements.themeToggle.querySelector('span:last-child').textContent = 'Dark Mode';
+            } else {
+                document.body.classList.add('light-mode');
+                elements.themeIcon.textContent = '☀️';
+                elements.themeToggle.querySelector('span:last-child').textContent = 'Light Mode';
+            }
+            saveGameState();
+        });
+
+        // Initialize the game
+        window.addEventListener('load', initGame);
+    </script>   
+</body>
+</html>
