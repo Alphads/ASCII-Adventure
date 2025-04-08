@@ -765,98 +765,14 @@
             });
         }
 
-        // Initialize music
-        function initMusic() {
-            const music = document.getElementById('background-music');
-            
-            // Set volume from saved state or default to 50%
-            music.volume = gameState.audio?.volume || 0.5;
-            
-            // Hide controls after testing
-            music.removeAttribute('controls');
-            
-            // Try to play, but prepare for autoplay restrictions
-            const playPromise = music.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.log("Autoplay blocked - will play after interaction");
-                    
-                    // Create a starter button if needed
-                    if (!document.getElementById('audio-starter')) {
-                        const starter = document.createElement('button');
-                        starter.id = 'audio-starter';
-                        starter.textContent = 'Click to enable audio';
-                        starter.style.position = 'fixed';
-                        starter.style.bottom = '20px';
-                        starter.style.right = '20px';
-                        starter.style.zIndex = '1000';
-                        starter.onclick = () => {
-                            music.play();
-                            starter.remove();
-                        };
-                        document.body.appendChild(starter);
-                    }
-                });
-            }
-        }
-
-        // Update your existing volume control
-        volumeSlider.addEventListener('input', function() {
-            const volumeValue = this.value / 100;
-            gameState.audio.volume = volumeValue;
-            document.getElementById('background-music').volume = volumeValue;
-            saveGameState();
-        });
-
-        // Add music toggle to settings modal
-        function addMusicToggle() {
-            const musicToggle = document.createElement('div');
-            musicToggle.className = 'settings-option';
-            musicToggle.innerHTML = `
-                <span>Background Music</span>
-                <label class="switch">
-                    <input type="checkbox" id="music-toggle" checked>
-                    <span class="slider round"></span>
-                </label>
-            `;
-            
-            // Insert after volume control
-            document.querySelector('.settings-option').after(musicToggle);
-            
-            // Music toggle functionality
-            document.getElementById('music-toggle').addEventListener('change', function() {
-                const music = document.getElementById('background-music');
-                gameState.audio.musicEnabled = this.checked;
-                
-                if (this.checked) {
-                    music.play();
-                } else {
-                    music.pause();
-                }
-                saveGameState();
-            });
-        }
-
         // Update initGame()
         function initGame() {
             loadGameState();
-            initMusic();
-            addMusicToggle();
-            // ... rest of your initialization ...
-            
-            // Set initial toggle state
-            if (gameState.audio.musicEnabled !== undefined) {
-                document.getElementById('music-toggle').checked = gameState.audio.musicEnabled;
-            }
-        }
-
-        // In your initGame():
-        function initGame() {
-            loadGameState();
-            initAudio(); // Initialize audio system
-            setupVolumeControls(); // Setup volume slider
-            // ... rest of your init code ...
+            renderMissions();
+            updateShopDisplay();
+            updateInventory();
+            updateSpeedDisplays();
+            showPage('home-page');
         }
         
         // Fullscreen functionality
@@ -982,18 +898,6 @@
                 button.classList.remove('active-tab');
             });
             event.currentTarget.classList.add('active-tab');
-        }
-
-        // Initialize Game
-        function initGame() {
-            loadGameState();
-            renderMissions();
-            updateShopDisplay();
-            updateInventory();
-            updateSpeedDisplays();
-            
-            // Set initial page
-            showPage('home-page');
         }
 
         // Mission System
